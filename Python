@@ -1,4 +1,13 @@
 import csv
+import os
+for filename in ["business.csv", "reviews.csv"]:
+    if not os.path.exists(filename):
+        with open(filename, "w", newline='') as file:
+            writer = csv.writer(file)
+            if filename == "business.csv":
+                writer.writerow(["Name", "Location", "Product", "Category"])
+            elif filename == "reviews.csv":
+                writer.writerow(["Business", "Rating", "Feedback"])
 
 class Business:
     def __init__(self, name, location, product, category):
@@ -85,8 +94,8 @@ def newcustomer():
                     if location in row[1].lower(): #prints the row if state matches
                         print("Found:", row)
                         found = True
-                    if not found:
-                        print("No businesses found in that location.")
+                if not found:
+                    print("No businesses found in that location.")
         elif choice == "3":
             categories = set()
             with open ("business.csv", "r") as file:
@@ -160,7 +169,7 @@ def admin():
                     if row[0].lower() != deletethisname:
                         newdata.append(row)
                     else: deleted = True
-            with open("business.csv", "w", newline = '') as file: #w is write mode, rewriting the file
+            with open("business.csv", "w") as file: #w is write mode, rewriting the file
                 writer = csv.writer(file)
                 writer.writerows(newdata) #overwrites old data in csv file with new data
             if deleted:
@@ -207,7 +216,7 @@ def admin():
             elif statchoice == "3":
                 categories = [row[3].strip().lower() for row in reader if len(row)> 3]
                 counts = Counter(categories)
-                print("\n Most Popuular Business Categories:")
+                print("\n Most Popular Business Categories:")
                 for category, count in counts.most_common():
                     print(f"{category.title()}: {count}")
             elif statchoice == "4":
@@ -276,6 +285,7 @@ def submitreview():
             writer = csv.writer(file)
             writer.writerow([businessname, rating, feedback])
         print("Thank you for your review!")
+        newperson()
 
 def reviewer():
     print("\n Reviewer Menu:")
