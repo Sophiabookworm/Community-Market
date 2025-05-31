@@ -1,0 +1,145 @@
+import csv
+
+class Business:
+    def __init__(self, name, location, product):
+        self.name =  name
+        self.location = location
+        self.product = product
+    def to_list(self):
+        return [self.name,self.location,self.product]
+
+def businessowner():
+    while True:
+        print("\n Business Owner Menu")
+        print("1. Register a business")
+        print("2. Return to main menu")
+        choice = input("Choose an option: 1 or 2.")
+        if choice == "1":
+            name = input("What is the name of your business? ")
+            location = input("What state is your business located in? ")
+            product = input("What does your business sell? ")
+            new_business = Business(name,location,product)
+            with open("business.csv", "a") as file: #a means append
+                writer = csv.writer(file)
+                writer.writerow([name, location, product]) #adds one new row
+            print("Awesome! Thanks for registering " + new_business.name + " with us!")
+        elif choice == "2":
+            break
+        else:
+            print("Invalid choice. Try again.")
+
+def customer():
+    while True:
+        print("\n Customer Menu")
+        print("1. Search by product")
+        print("2. Search by location")
+        print("3. Return to main menu")
+        choice = input("Choose an option: 1, 2, or 3.")
+
+        if choice == "1":
+            product = input("What product are you looking for?").lower()
+            with open ("business.csv", "r") as file: #r is for reading/reader
+                reader = csv.reader(file)
+                found = False
+                for row in reader:
+                    if product in row [2].lower(): #goes through every row, row[2] is product column
+                        print(f"Found:",row)
+                        found = True
+                if not found:
+                    print("No businesses found for that product.")
+        elif choice == "2":
+            location = input("What state are you looking in?").lower()
+            with open("business.csv", "r") as file:
+                reader = csv.reader(file)
+                found = False
+                for row in reader:
+                    if location in row[1].lower(): #prints the row if state matches
+                        print("Found:", row)
+                        found = True
+                    if not found:
+                        print("No businesses found in that location.")
+        elif choice == "3":
+            newperson()
+        else:
+            print("Invalid choice. Please select 1, 2, or 3.")
+
+def admin():
+    while True:
+        print("\n Admin Menu")
+        print("1. View all businesses.")
+        print("2. Delete a business.")
+        print("3. Show product popularity.")
+        print("4. Return to main menu.")
+        choice = input("Choose an option: 1, 2, 3, or 3.")
+        if choice == "1":
+            with open("business.csv", "r") as file:
+                reader = csv.reader(file)
+                print("Registered businesses:")
+                for row in reader:
+                    print(row)
+        elif choice == "2":
+            deletethisname = input("Enter the business name to delete:")
+            newdata = []
+            deleted = False
+            with open("business.csv", "r") as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    if row[0].lower() != deletethisname:
+                        newdata.append(row)
+                    else: deleted = True
+            with open("business.csv", "w", newline = '') as file: #w is write mode, rewriting the file
+                writer = csv.writer(file)
+                writer.writerows(newdata) #overwrites old data in csv file with new data
+            if deleted:
+                print("Business deleted.")
+            else:
+                print("Business not found.")
+        elif choice == "3":
+            from collections import Counter #Python tool to count # of times an item appears in a list
+            with open("business.csv", "r") as file:
+                reader = csv.reader(file)
+                products = [row[2].lower() for row in reader]
+                counts = Counter(products)
+                print("Product counts:")
+                for product, count in counts.items():
+                    print(f"{product}: {count}")
+        elif choice == "4":
+            newperson()
+        else:
+            print("Choose one of the options listed above. Try again.")
+
+def adminlogin():
+    correctpw = "hackmhs2025"
+    loginattempts = 0
+    while loginattempts < 3:
+        inputpw = str(input("What is the admin password?"))
+        if inputpw == correctpw:
+            print("Welcome, administrator.")
+            admin()
+            return
+        else:
+            loginattempts += 1
+            if loginattempts < 3:
+                inputpw = input(f"Incorrect password. You have {3 - loginattempts} attempts.")
+    print("Too many incorrect attempts. You are not an admin.")
+    user = input("Are you a business owner or a customer? Please enter 'b' or 'c': ")
+    
+def newperson():
+    user = 'none'
+    while (user.lower() != 'b') and (user.lower() != 'c') and (user.lower() != 'a'):
+        user = input("\n Are you an admin, business owner, or a customer? Please enter 'a' if you are an admin, 'b' if you are a business owner, or 'c' if you are a customer. ")
+        if user.lower() == 'b':
+            print(" ")
+            businessowner()
+        elif user.lower() == 'c':
+            print(" ")
+            customer()
+        elif user.lower() == 'a':
+            print(" ")
+            adminlogin()
+        else:
+            print("Sorry, I didn't get that.")
+            print(" ")
+
+
+newperson()
