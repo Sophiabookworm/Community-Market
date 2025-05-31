@@ -1,12 +1,13 @@
 import csv
 
 class Business:
-    def __init__(self, name, location, product):
+    def __init__(self, name, location, product, category):
         self.name =  name
         self.location = location
         self.product = product
+        self.category = category
     def to_list(self):
-        return [self.name,self.location,self.product]
+        return [self.name,self.location,self.product,self.category]
 
 def businessowner():
     while True:
@@ -15,27 +16,55 @@ def businessowner():
         print("2. Return to main menu")
         choice = input("Choose an option: 1 or 2.")
         if choice == "1":
-            name = input("What is the name of your business? ")
+            while True:
+                name = input("What is the name of your business? ")
+                with open("business.csv", "r") as file:
+                    reader = csv.reader(file)
+                    if any(name.strip().lower() == row[0].lower() for row in reader):
+                        print("A business with this name already exists. Please choose a new one:")
+                    else:
+                        break
             location = input("What state is your business located in? ")
             product = input("What does your business sell? ")
-            new_business = Business(name,location,product)
+            category = input("What is your business category? For example: food, clothing, tech, or retail.")
+            new_business = Business(name,location,product,category)
             with open("business.csv", "a") as file: #a means append
                 writer = csv.writer(file)
-                writer.writerow([name, location, product]) #adds one new row
+                writer.writerow([name, location, product,category]) #adds one new row
             print("Awesome! Thanks for registering " + new_business.name + " with us!")
         elif choice == "2":
-            break
+            newperson()
         else:
             print("Invalid choice. Try again.")
 
-def customer():
-    while True:
-        print("\n Customer Menu")
-        print("1. Search by product")
-        print("2. Search by location")
-        print("3. Return to main menu")
-        choice = input("Choose an option: 1, 2, or 3.")
+def listallbusinesses():
+    try:
+        with open("business.csv", "r") as file:
+            reader = csv.reader(file)
+            businesses = list(reader)
+            if not businesses:
+                print("No businesses registered yet. Come back soon!")
+                return
+            print("\n All Registered Businesses:")
+            for row in businesses:
+                if len(row) >= 4:
+                    print(f"Name: {row[0]}, Location: {row[1]}, Product: {row[2]}, Category: {row[3]}")
+                else:
+                    print(f"Incomplete data: {row}")
+    except FileNotFoundError:
+        print("No businesses registered yet.")
+        newperson()
 
+def newcustomer():
+    while True:
+        print("\n New Customer Menu")
+        print("1. Search by product.")
+        print("2. Search by location.")
+        print("3. Search by category.")
+        print("4. See reviews for a business.")
+        print("5. See all businesses.")
+        print("6. Return to main menu.")
+        choice = input("Choose an option: 1, 2, 3, 4, 5, or 6.")
         if choice == "1":
             product = input("What product are you looking for?").lower()
             with open ("business.csv", "r") as file: #r is for reading/reader
@@ -59,9 +88,52 @@ def customer():
                     if not found:
                         print("No businesses found in that location.")
         elif choice == "3":
+            categories = set()
+            with open ("business.csv", "r") as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    if len(row)>3:
+                        categories.add(row[3].strip().lower())
+            if categories:
+                print("\n Available Categories:")
+                for category in sorted(categories):
+                    print(f"- {category}")
+            else:
+                print("No categories found yet.")
+            category = input("\n What business category are you looking for?")
+            with open ("business.csv", "r") as file:
+                reader = csv.reader(file)
+                found = False
+                for row in reader:
+                    if len(row) > 3 and category in row[3].lower():
+                        print("Found:", row)
+                        found = True
+                if found == False:
+                    print("No business found in that category.")
+        elif choice == "4":
+            businessname = input("Enter a business name to see reviews:").strip().lower()
+            found = False
+            try:
+                with open("reviews.csv", "r") as file:
+                    reader = csv.reader(file)
+                    print(f"\n Reviews for {businessname.title()}:")
+                    for row in reader:
+                        if row and row[0].strip().lower() == businessname:
+                            found = True
+                            rating = row[1]
+                            feedback = row[2]
+                            print(f"Rating: {rating}/5")
+                            print(f"Feedback: {feedback}\n")
+                        if not found:
+                            print("No reviews found for this business.")
+            except FileNotFoundError:
+                print("No reviews available yet.")
+        elif choice == "5":
+            listallbusinesses()
+        elif choice == "6":
             newperson()
         else:
-            print("Invalid choice. Please select 1, 2, or 3.")
+            print("Invalid choice. Please select 1, 2, 3, or 4.")
 
 def admin():
     while True:
@@ -69,8 +141,9 @@ def admin():
         print("1. View all businesses.")
         print("2. Delete a business.")
         print("3. Show product popularity.")
-        print("4. Return to main menu.")
-        choice = input("Choose an option: 1, 2, 3, or 3.")
+        print("4. See data.")
+        print("5. Return to main menu.")
+        choice = input("Choose an option: 1, 2, 3, 4, or 5.")
         if choice == "1":
             with open("business.csv", "r") as file:
                 reader = csv.reader(file)
@@ -104,6 +177,52 @@ def admin():
                 for product, count in counts.items():
                     print(f"{product}: {count}")
         elif choice == "4":
+            from collections import Counter
+            with open ("business.csv", "r") as file:
+                reader = list(csv.reader(file))
+                if not reader:
+                    print("No data available.")
+                    admin()
+            print("\n What stats would you like to view?")
+            print("1. Most popular products.")
+            print("2. Percentage of product types.")
+            print("3. Most popular business categories.")
+            print("4. Percentage of business categories.")
+            print("5. Return to main menu.")
+            statchoice = input("Choose an option: 1, 2, 3, 4, or 5.")
+            if statchoice == "1":
+                products = [row[2].strip().lower() for row in reader if len(row)>2]
+                counts = Counter(products)
+                print("\n Top Products:")
+                for product, count in counts.most_common():
+                    print(f"{product.title()}: {count}")
+            elif statchoice == "2":
+                products = [row[2].strip().lower() for row in reader if len(row) >= 3]
+                total = len(products)
+                counts = Counter(products)
+                print("\n Product Type Percentages:")
+                for product, count in counts.items():
+                    percent = round((count/total) * 100, 2)
+                    print(f"{product.title()}: {percent}%")
+            elif statchoice == "3":
+                categories = [row[3].strip().lower() for row in reader if len(row)> 3]
+                counts = Counter(categories)
+                print("\n Most Popuular Business Categories:")
+                for category, count in counts.most_common():
+                    print(f"{category.title()}: {count}")
+            elif statchoice == "4":
+                categories = [row[3].strip().lower() for row in reader if len(row)>3]
+                total = len(categories)
+                counts = Counter(categories)
+                print("\n Business Category Percetanges:")
+                for category, count in counts.items():
+                    percent = round((count/total) * 100, 2)
+                    print(f"{category.title()}: {percent}%")
+            elif statchoice == "5":
+                newperson()
+            else:
+                admin()
+        elif choice == "5":
             newperson()
         else:
             print("Choose one of the options listed above. Try again.")
@@ -122,24 +241,74 @@ def adminlogin():
             if loginattempts < 3:
                 inputpw = input(f"Incorrect password. You have {3 - loginattempts} attempts.")
     print("Too many incorrect attempts. You are not an admin.")
-    user = input("Are you a business owner or a customer? Please enter 'b' or 'c': ")
-    
+    newperson()
+
+def submitreview():
+        businessname = input("Which business do you want to review?").strip().lower()
+        with  open ("business.csv", "r") as file:
+            reader = csv.reader(file)
+            if not any(businessname.lower() == row[0].lower() for row in reader):
+                print("Business not found.")
+                print("\n What would you like to do?")
+                print("1. Restart review submission.")
+                print("2. Return to main menu.")
+                choice2 = input("Choose an option: 1 or 2")
+                if choice2 == "1":
+                    submitreview()
+                elif choice2 == "2":
+                    newperson()
+                else:
+                    print("Invalid option.")
+                    reviewer()
+        while True:
+            try:
+                rating = int(input("Rate the business from 1 to 5:"))
+                if 1 <= rating <= 5:
+                    break
+                else:
+                    print("Please enter a number between 1 to 5.")
+                    submitreview()
+            except ValueError:
+                print("Invalid input. Enter a number.")
+        feedback = input("Leave your feedback:").strip()
+
+        with open("reviews.csv", "a", newline = '') as file: #saves the review
+            writer = csv.writer(file)
+            writer.writerow([businessname, rating, feedback])
+        print("Thank you for your review!")
+
+def reviewer():
+    print("\n Reviewer Menu:")
+    print("1. Leave a review.")
+    print("2. Return to main menu.")
+    choice = input("Choose an option: 1 or 2.")
+    if choice == "1":
+        submitreview()
+    elif choice == "2":
+        newperson()
+    else:
+        print("Invalid option.")
+        reviewer()
+            
 def newperson():
     user = 'none'
-    while (user.lower() != 'b') and (user.lower() != 'c') and (user.lower() != 'a'):
-        user = input("\n Are you an admin, business owner, or a customer? Please enter 'a' if you are an admin, 'b' if you are a business owner, or 'c' if you are a customer. ")
-        if user.lower() == 'b':
-            print(" ")
-            businessowner()
-        elif user.lower() == 'c':
-            print(" ")
-            customer()
-        elif user.lower() == 'a':
-            print(" ")
+    print("\n Who are you?")
+    print("1. Admin")
+    print("2. Business owner")
+    print("3. New Customer")
+    print("4. Reviewer")
+    while True:
+        user = input("Choose an option: 1, 2, 3, or 4.")
+        if user.lower() == "1":
             adminlogin()
+        elif user.lower() == "2":
+            businessowner()
+        elif user.lower() == "3":
+            newcustomer()
+        elif user.lower() == "4":
+            reviewer()
         else:
-            print("Sorry, I didn't get that.")
-            print(" ")
+            print("Invalid option. Please try again.")
 
-
+print("\n Welcome to Community Market! This is a place where you can support small businesses.")
 newperson()
