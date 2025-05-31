@@ -1,4 +1,17 @@
 import csv
+import flask
+
+APP = flask.Flask(CommunityMarket)
+
+@app.route('/')
+def index():
+    return flask.render_template('index.html')
+
+if CommunityMarket == 'main':
+    APP.debug = True
+    APP.run()
+
+vim templates/index.html
 
 class Business:
     def __init__(self, name, location, product, category):
